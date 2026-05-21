@@ -39,17 +39,17 @@ class Order(models.Model):
         null=True,
         blank=True,
         related_name='orders',
-        verbose_name='Пользователь',
+        verbose_name='Користувач',
     )
 
-    # Контактные данные для доставки
+    # Контактні дані для доставки
     first_name = models.CharField(
         max_length=100,
-        verbose_name='Имя',
+        verbose_name="Ім'я",
     )
     last_name = models.CharField(
         max_length=100,
-        verbose_name='Фамилия',
+        verbose_name='Прізвище',
     )
     email = models.EmailField(
         verbose_name='Email',
@@ -59,7 +59,7 @@ class Order(models.Model):
         verbose_name='Телефон',
     )
     address = models.TextField(
-        verbose_name='Адрес доставки',
+        verbose_name='Адреса доставки',
     )
 
     status = models.CharField(
@@ -70,24 +70,24 @@ class Order(models.Model):
     )
     created_at = models.DateTimeField(
         auto_now_add=True,
-        verbose_name='Дата создания',
+        verbose_name='Дата створення',
     )
     updated_at = models.DateTimeField(
         auto_now=True,
-        verbose_name='Дата обновления',
+        verbose_name='Дата оновлення',
     )
     notes = models.TextField(
         blank=True,
-        verbose_name='Комментарий к заказу',
+        verbose_name='Коментар до замовлення',
     )
 
     class Meta:
-        verbose_name = 'Заказ'
-        verbose_name_plural = 'Заказы'
+        verbose_name = 'Замовлення'
+        verbose_name_plural = 'Замовлення'
         ordering = ['-created_at']
 
     def __str__(self):
-        return f'Заказ #{self.pk} — {self.first_name} {self.last_name}'
+        return f'Замовлення #{self.pk} — {self.first_name} {self.last_name}'
 
     @property
     def total_cost(self):
@@ -109,7 +109,7 @@ class OrderItem(models.Model):
         Order,
         on_delete=models.CASCADE,
         related_name='items',
-        verbose_name='Заказ',
+        verbose_name='Замовлення',
     )
     product = models.ForeignKey(
         Product,
@@ -120,18 +120,18 @@ class OrderItem(models.Model):
     price = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        verbose_name='Цена на момент заказа (₴)',
-        help_text='Фиксируется при оформлении, не зависит от текущей цены товара',
+        verbose_name='Ціна на момент замовлення (₴)',
+        help_text='Фіксується при оформленні, не залежить від поточної ціни товару',
     )
     quantity = models.PositiveIntegerField(
         default=1,
-        verbose_name='Количество',
+        verbose_name='Кількість',
         validators=[MinValueValidator(1)],
     )
 
     class Meta:
-        verbose_name = 'Позиция заказа'
-        verbose_name_plural = 'Позиции заказа'
+        verbose_name = 'Позиція замовлення'
+        verbose_name_plural = 'Позиції замовлення'
 
     def __str__(self):
         return f'{self.product.name} × {self.quantity}'

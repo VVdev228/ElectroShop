@@ -8,11 +8,11 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
-from catalog.views import product_list
+from catalog.views import home_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', product_list, name='home'),             # Главная = каталог
+    path('', home_view, name='home'),
     path('catalog/', include('catalog.urls')),         # Каталог товаров
     path('orders/', include('orders.urls')),           # Заказы и корзина
     path('users/', include('users.urls')),             # Авторизация

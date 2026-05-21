@@ -4,7 +4,7 @@
 """
 
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordChangeForm
 
 from .models import CustomUser
 
@@ -89,6 +89,28 @@ class ProfileEditForm(forms.ModelForm):
             'phone':      forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+380 (99) 123-45-67'}),
             'address':    forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
+
+
+class CustomPasswordChangeForm(PasswordChangeForm):
+    """Форма зміни пароля з Bootstrap-стилізацією."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['old_password'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Введіть поточний пароль',
+        })
+        self.fields['old_password'].label = 'Поточний пароль'
+        self.fields['new_password1'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Введіть новий пароль',
+        })
+        self.fields['new_password1'].label = 'Новий пароль'
+        self.fields['new_password2'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Повторіть новий пароль',
+        })
+        self.fields['new_password2'].label = 'Підтвердження нового пароля'
 
 
 class CustomUserLoginForm(AuthenticationForm):

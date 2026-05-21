@@ -116,10 +116,13 @@
 
                 <hr class="my-4">
                 <h5 class="fw-semibold mb-3">Характеристики</h5>
-                <table class="table table-sm">
+                <table class="table table-sm specs-table">
                     <tr><td class="text-muted">Категорія</td><td class="fw-semibold">{{ product.category.name }}</td></tr>
                     <tr><td class="text-muted">Бренд</td><td class="fw-semibold">{{ product.brand.name }}</td></tr>
                     <tr><td class="text-muted">Артикул</td><td class="fw-semibold">{{ product.sku }}</td></tr>
+                    {% for key, value in product.specs.items %}
+                    <tr><td class="text-muted">{{ key }}</td><td class="fw-semibold">{{ value }}</td></tr>
+                    {% endfor %}
                 </table>
             </div>
         </div>

@@ -137,6 +137,12 @@ class Product(models.Model):
         blank=True,
         verbose_name='Изображение',
     )
+    specs = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name='Характеристики',
+        help_text='Словник "назва": "значення", наприклад: {"Дисплей": "6.1 OLED"}',
+    )
     available = models.BooleanField(
         default=True,
         verbose_name='Доступен',

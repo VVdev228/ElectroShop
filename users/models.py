@@ -49,6 +49,13 @@ class CustomUser(AbstractUser):
         help_text='Адрес для доставки заказов',
     )
 
+    saved_cart = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name='Збережений кошик',
+        help_text='Кошик зберігається автоматично при виході з системи',
+    )
+
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'

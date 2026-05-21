@@ -16,4 +16,5 @@ class OrdersConfig(AppConfig):
         Сигналы будут созданы на Шаге 5 для автоматического
         списания товара со склада при оформлении заказа.
         """
-        import orders.signals  # noqa: F401
+        import orders.signals      # noqa: F401
+        import orders.cart_signals  # noqa: F401

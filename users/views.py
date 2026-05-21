@@ -11,7 +11,8 @@ from django.db.models import Sum, Count, F
 from django.utils import timezone
 from datetime import timedelta
 
-from .forms import CustomUserCreationForm, CustomUserLoginForm, ProfileEditForm
+from django.contrib.auth import update_session_auth_hash
+from .forms import CustomUserCreationForm, CustomUserLoginForm, ProfileEditForm, CustomPasswordChangeForm
 
 
 def _is_manager(user):
@@ -83,6 +84,21 @@ def profile_edit_view(request):
     else:
         form = ProfileEditForm(instance=request.user)
     return render(request, 'users/profile_edit.html', {'form': form})
+
+
+@login_required
+def password_change_view(request):
+    """Зміна пароля користувача."""
+    if request.method == 'POST':
+        form = CustomPasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
+            messages.success(request, 'Пароль успішно змінено.')
+            return redirect('users:profile')
+    else:
+        form = CustomPasswordChangeForm(request.user)
+    return render(request, 'users/password_change.html', {'form': form})
 
 
 @user_passes_test(_is_manager, login_url='/users/login/')

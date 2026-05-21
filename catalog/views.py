@@ -25,6 +25,26 @@ def _build_categories_with_brands():
     return result
 
 
+CATEGORY_ICONS = {
+    'smartfony':  'bi-phone',
+    'noutbuki':   'bi-laptop',
+    'planshety':  'bi-tablet',
+    'navushniki': 'bi-headphones',
+    'aksesuary':  'bi-plug',
+}
+
+
+def home_view(request):
+    """Головна сторінка з hero-банером та підбіркою товарів."""
+    featured = Product.objects.filter(available=True).select_related('category', 'brand').order_by('-created_at')[:8]
+    categories = Category.objects.all()
+    categories_with_icons = [(c, CATEGORY_ICONS.get(c.slug, 'bi-grid')) for c in categories]
+    return render(request, 'home.html', {
+        'featured': featured,
+        'categories_with_icons': categories_with_icons,
+    })
+
+
 def product_list(request, category_slug=None):
     """
     Страница каталога — список товаров с поиском, фильтрацией и пагинацией.

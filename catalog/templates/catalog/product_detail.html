@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} — ElectroShop{% endblock %}
+
+{% block content %}
+<div class="animate-in">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none">Головна</a></li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'catalog:product_list_by_category' product.category.slug %}" class="text-decoration-none">
+                    {{ product.category.name }}
+                </a>
+            </li>
+            <li class="breadcrumb-item active">{{ product.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            {% if gallery %}
+            <div class="card border-0 shadow-sm mb-3" style="border-radius: 16px; overflow: hidden;">
+                <div id="productCarousel" class="carousel slide" data-bs-ride="false">
+                    <div class="carousel-inner">
+                        {% for url in gallery %}
+                        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                            <img src="{{ url }}" alt="{{ product.name }}" class="product-detail-img w-100">
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if gallery|length > 1 %}
+                    <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon"></span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon"></span>
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if gallery|length > 1 %}
+            <div class="d-flex gap-2 flex-wrap">
+                {% for url in gallery %}
+                <div class="gallery-thumb {% if forloop.first %}active{% endif %}"
+                     data-bs-target="#productCarousel"
+                     data-bs-slide-to="{{ forloop.counter0 }}">
+                    <img src="{{ url }}" alt="{{ product.name }}">
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% else %}
+            <div class="card border-0 shadow-sm d-flex align-items-center justify-content-center"
+                 style="height: 450px; border-radius: 16px; background: #f1f5f9;">
+                <i class="bi bi-image text-muted" style="font-size: 6rem;"></i>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm p-4" style="border-radius: 16px;">
+                <span class="product-brand mb-2">{{ product.brand.name }}</span>
+                <h1 class="h3 fw-bold mb-3">{{ product.name }}</h1>
+
+                <p class="text-muted small mb-3">
+                    <i class="bi bi-upc-scan me-1"></i> Артикул: {{ product.sku }}
+                </p>
+
+                <div class="mb-3">
+                    {% if stock_quantity > 5 %}
+                        <span class="badge-stock badge-in-stock">
+                            <i class="bi bi-check-circle"></i> В наявності ({{ stock_quantity }} шт.)
+                        </span>
+                    {% elif stock_quantity > 0 %}
+                        <span class="badge-stock badge-low-stock">
+                            <i class="bi bi-exclamation-circle"></i> Залишилось мало ({{ stock_quantity }} шт.)
+                        </span>
+                    {% else %}
+                        <span class="badge-stock badge-out-of-stock">
+                            <i class="bi bi-x-circle"></i> Немає в наявності
+                        </span>
+                    {% endif %}
+                </div>
+
+                <div class="mb-4">
+                    <span class="product-price" style="font-size: 2rem;">
+                        {{ product.price|floatformat:0 }} ₴
+                    </span>
+                </div>
+
+                {% if stock_quantity > 0 %}
+                <form action="{% url 'orders:cart_add' product.pk %}" method="post">
+                    {% csrf_token %}
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <label for="id_quantity" class="form-label mb-0 fw-semibold">К-сть:</label>
+                        {{ cart_form.quantity }}
+                        <input type="hidden" name="override" value="">
+                    </div>
+                    <button type="submit" class="btn btn-es-primary btn-lg w-100">
+                        <i class="bi bi-cart-plus me-2"></i>Додати до кошика
+                    </button>
+                </form>
+                {% else %}
+                <button class="btn btn-secondary btn-lg w-100" disabled>
+                    <i class="bi bi-cart-x me-2"></i>Немає в наявності
+                </button>
+                {% endif %}
+
+                {% if product.description %}
+                <hr class="my-4">
+                <h5 class="fw-semibold mb-3">Опис</h5>
+                <p class="text-muted" style="line-height: 1.7;">{{ product.description|linebreaksbr }}</p>
+                {% endif %}
+
+                <hr class="my-4">
+                <h5 class="fw-semibold mb-3">Характеристики</h5>
+                <table class="table table-sm">
+                    <tr><td class="text-muted">Категорія</td><td class="fw-semibold">{{ product.category.name }}</td></tr>
+                    <tr><td class="text-muted">Бренд</td><td class="fw-semibold">{{ product.brand.name }}</td></tr>
+                    <tr><td class="text-muted">Артикул</td><td class="fw-semibold">{{ product.sku }}</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

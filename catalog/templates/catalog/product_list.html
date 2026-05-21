@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}{% if category %}{{ category.name }} — {% elif query %}Пошук — {% endif %}ElectroShop{% endblock %}
+
+{% block content %}
+<div class="animate-in">
+<div class="row g-4">
+
+    {# ─── SIDEBAR ────────────────────────────────────────────── #}
+    <div class="col-lg-3">
+
+        {# Categories #}
+        <div class="sidebar-panel">
+            <div class="sidebar-label">Категорії</div>
+            <ul class="category-list">
+
+                <li>
+                    <div class="cat-row {% if not category %}active-solo{% endif %}">
+                        <a href="{% url 'catalog:product_list' %}{% if query %}?q={{ query }}{% endif %}"
+                           class="cat-link">Всі товари</a>
+                    </div>
+                </li>
+
+                {% for c, c_brands in categories_with_brands %}
+                <li>
+                    <div class="cat-row {% if category.slug == c.slug %}active{% endif %}">
+                        <a href="{% url 'catalog:product_list_by_category' c.slug %}"
+                           class="cat-link">{{ c.name }}</a>
+                        {% if c_brands %}
+                        <button class="cat-toggle"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#brands-{{ c.slug }}"
+                                aria-expanded="{% if category.slug == c.slug %}true{% else %}false{% endif %}">
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+                    {% if c_brands %}
+                    <div class="collapse {% if category.slug == c.slug %}show{% endif %}"
+                         id="brands-{{ c.slug }}">
+                        <ul class="brand-sub">
+                            {% for brand in c_brands %}
+                            <li>
+                                <a href="{% url 'catalog:product_list_by_category' c.slug %}?brand={{ brand.pk }}{% if query %}&q={{ query }}{% endif %}"
+                                   class="brand-link {% if category.slug == c.slug and brand_id == brand.pk|stringformat:'s' %}brand-active{% endif %}">
+                                    {{ brand.name }}
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </li>
+                {% endfor %}
+
+            </ul>
+        </div>
+
+        {# Filters #}
+        <div class="sidebar-panel">
+            <div class="sidebar-label">Фільтри</div>
+            <form method="get" id="filter-form"
+                  action="{% if category %}{% url 'catalog:product_list_by_category' category.slug %}{% else %}{% url 'catalog:product_list' %}{% endif %}">
+                {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+
+                <div class="mb-3">
+                    <label class="form-label">Бренд</label>
+                    <select name="brand" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="">Усі бренди</option>
+                        {% for b in brands %}
+                        <option value="{{ b.pk }}" {% if brand_id == b.pk|stringformat:"s" %}selected{% endif %}>
+                            {{ b.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Ціна, ₴</label>
+                    <div class="d-flex gap-2">
+                        <input type="number" name="min_price" value="{{ min_price }}"
+                               placeholder="від" class="form-control form-control-sm" min="0">
+                        <input type="number" name="max_price" value="{{ max_price }}"
+                               placeholder="до" class="form-control form-control-sm" min="0">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-es-primary btn-sm w-100">
+                    Застосувати
+                </button>
+                {% if brand_id or min_price or max_price %}
+                <a href="{% if category %}{% url 'catalog:product_list_by_category' category.slug %}{% else %}{% url 'catalog:product_list' %}{% endif %}{% if query %}?q={{ query }}{% endif %}"
+                   class="btn btn-es-outline btn-sm w-100 mt-2">Скинути</a>
+                {% endif %}
+            </form>
+        </div>
+
+    </div>
+
+    {# ─── MAIN CONTENT ───────────────────────────────────────── #}
+    <div class="col-lg-9">
+
+        {# Search bar #}
+        <form method="get" action="{% url 'catalog:product_list' %}" class="mb-4">
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" name="q" value="{{ query }}"
+                       class="form-control"
+                       placeholder="Пошук товарів...">
+                <button type="submit" class="btn btn-es-primary px-4">Знайти</button>
+                {% if query %}
+                <a href="{% url 'catalog:product_list' %}" class="btn btn-es-outline"><i class="bi bi-x"></i></a>
+                {% endif %}
+            </div>
+        </form>
+
+        {# Title + sort #}
+        <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap">
+            <div>
+                <div class="section-header" style="margin-bottom: 2px;">
+                    <div class="section-line"></div>
+                    <h1 class="h5 mb-0 fw-bold">
+                        {% if category %}{{ category.name }}
+                        {% elif query %}«{{ query }}»
+                        {% else %}Всі товари{% endif %}
+                    </h1>
+                </div>
+                <span style="font-size:0.78rem; color: var(--c-text-2); padding-left: 13px;">{{ total_count }} товарів</span>
+            </div>
+            <form method="get" action="{% if category %}{% url 'catalog:product_list_by_category' category.slug %}{% else %}{% url 'catalog:product_list' %}{% endif %}">
+                {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+                {% if brand_id %}<input type="hidden" name="brand" value="{{ brand_id }}">{% endif %}
+                {% if min_price %}<input type="hidden" name="min_price" value="{{ min_price }}">{% endif %}
+                {% if max_price %}<input type="hidden" name="max_price" value="{{ max_price }}">{% endif %}
+                <select name="sort" class="form-select form-select-sm" style="width:auto;" onchange="this.form.submit()">
+                    <option value="newest"    {% if sort == 'newest'    %}selected{% endif %}>Новинки</option>
+                    <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>Ціна ↑</option>
+                    <option value="price_desc"{% if sort == 'price_desc'%}selected{% endif %}>Ціна ↓</option>
+                    <option value="name"      {% if sort == 'name'      %}selected{% endif %}>За назвою</option>
+                </select>
+            </form>
+        </div>
+
+        {# Product grid #}
+        {% if products %}
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3">
+            {% for product in products %}
+            <div class="col">
+                <div class="product-card h-100">
+                    <a href="{{ product.get_absolute_url }}" class="card-img-top text-decoration-none">
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                        {% else %}
+                            <i class="bi bi-image" style="font-size: 3rem; color: var(--c-text-3);"></i>
+                        {% endif %}
+                    </a>
+                    <div class="card-body">
+                        <span class="product-brand">{{ product.brand.name }}</span>
+                        <h5 class="card-title mb-3">
+                            <a href="{{ product.get_absolute_url }}">{{ product.name }}</a>
+                        </h5>
+                        <div class="d-flex justify-content-between align-items-center mt-auto">
+                            <span class="product-price">{{ product.price|floatformat:0 }} ₴</span>
+                            <form action="{% url 'orders:cart_add' product.pk %}" method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="quantity" value="1">
+                                <input type="hidden" name="override" value="">
+                                <button type="submit" class="btn-es-cart">
+                                    <i class="bi bi-bag-plus me-1"></i>До кошика
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {# Pagination #}
+        {% if page_obj.has_other_pages %}
+        <nav class="mt-5" aria-label="Сторінки">
+            <ul class="pagination justify-content-center gap-1">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link rounded-2" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if brand_id %}&brand={{ brand_id }}{% endif %}{% if min_price %}&min_price={{ min_price }}{% endif %}{% if max_price %}&max_price={{ max_price }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link rounded-2"><i class="bi bi-chevron-left"></i></span></li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link rounded-2">{{ num }}</span>
+                    </li>
+                    {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+                    <li class="page-item">
+                        <a class="page-link rounded-2" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if brand_id %}&brand={{ brand_id }}{% endif %}{% if min_price %}&min_price={{ min_price }}{% endif %}{% if max_price %}&max_price={{ max_price }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link rounded-2" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if brand_id %}&brand={{ brand_id }}{% endif %}{% if min_price %}&min_price={{ min_price }}{% endif %}{% if max_price %}&max_price={{ max_price }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link rounded-2"><i class="bi bi-chevron-right"></i></span></li>
+                {% endif %}
+            </ul>
+            <p class="text-center mt-2" style="font-size:0.78rem; color: var(--c-text-2);">
+                Сторінка {{ page_obj.number }} з {{ page_obj.paginator.num_pages }}
+            </p>
+        </nav>
+        {% endif %}
+
+        {% else %}
+        <div class="text-center py-5" style="color: var(--c-text-2);">
+            <i class="bi bi-search-heart" style="font-size:3rem; opacity:0.3;"></i>
+            <p class="mt-3" style="font-size:0.95rem;">
+                {% if query %}За запитом «{{ query }}» нічого не знайдено
+                {% else %}Товари не знайдено{% endif %}
+            </p>
+            <a href="{% url 'catalog:product_list' %}" class="btn btn-es-primary mt-2">Усі товари</a>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+</div>
+{% endblock %}

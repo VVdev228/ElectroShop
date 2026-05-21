@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Особистий кабінет — ElectroShop{% endblock %}
+
+{% block content %}
+<div class="animate-in">
+    <div class="row">
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm p-4" style="border-radius: 16px;">
+                <div class="text-center mb-3">
+                    <i class="bi bi-person-circle" style="font-size: 4rem; color: var(--es-primary);"></i>
+                    <h4 class="fw-bold mt-2">{{ user.first_name }} {{ user.last_name }}</h4>
+                    <p class="text-muted mb-1">{{ user.email }}</p>
+                    {% if user.phone %}
+                    <p class="text-muted mb-0"><i class="bi bi-telephone me-1"></i>{{ user.phone }}</p>
+                    {% endif %}
+                </div>
+                <hr>
+                <div class="small">
+                    <p class="mb-1"><strong>Логін:</strong> {{ user.username }}</p>
+                    <p class="mb-1"><strong>Роль:</strong> {{ user.get_role_display }}</p>
+                    <p class="mb-2"><strong>Дата реєстрації:</strong> {{ user.date_joined|date:"d.m.Y" }}</p>
+                </div>
+                {% if user.address %}
+                <p class="small text-muted mb-2">
+                    <i class="bi bi-geo-alt me-1"></i>{{ user.address }}
+                </p>
+                {% endif %}
+                <a href="{% url 'users:profile_edit' %}" class="btn btn-es-outline btn-sm w-100">
+                    <i class="bi bi-pencil me-1"></i> Редагувати профіль
+                </a>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <h4 class="fw-bold mb-3">
+                <i class="bi bi-clock-history" style="color: var(--es-primary);"></i> Мої замовлення
+            </h4>
+
+            {% if orders %}
+                {% for order in orders %}
+                <div class="card border-0 shadow-sm mb-3" style="border-radius: 16px;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0 fw-semibold">Замовлення #{{ order.pk }}</h5>
+                            <div>
+                                <span class="order-status status-{{ order.status }}">
+                                    {{ order.get_status_display }}
+                                </span>
+                                <small class="text-muted ms-2">{{ order.created_at|date:"d.m.Y H:i" }}</small>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0">
+                                <tbody>
+                                    {% for item in order.items.all %}
+                                    <tr>
+                                        <td>
+                                            <a href="{{ item.product.get_absolute_url }}" class="text-decoration-none">
+                                                {{ item.product.name }}
+                                            </a>
+                                        </td>
+                                        <td class="text-muted">{{ item.quantity }} шт.</td>
+                                        <td class="text-end fw-semibold">{{ item.total_price|floatformat:0 }} ₴</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="2" class="text-end fw-bold">Разом:</td>
+                                        <td class="text-end fw-bold" style="color: var(--es-primary);">
+                                            {{ order.total_cost|floatformat:0 }} ₴
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-bag text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-3">У вас ще немає замовлень</p>
+                    <a href="{% url 'catalog:product_list' %}" class="btn btn-es-primary">
+                        <i class="bi bi-grid me-1"></i> Перейти до каталогу
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

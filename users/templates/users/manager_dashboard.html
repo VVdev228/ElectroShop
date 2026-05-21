@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+
+{% block title %}Панель менеджера — ElectroShop{% endblock %}
+
+{% block content %}
+<div class="animate-in">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 fw-bold mb-0">
+            <i class="bi bi-speedometer2" style="color: var(--es-primary);"></i> Панель менеджера
+        </h1>
+        <a href="{% url 'admin:index' %}" class="btn btn-es-outline btn-sm">
+            <i class="bi bi-gear me-1"></i> Перейти до Admin
+        </a>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100" style="border-radius: 16px; border-left: 4px solid var(--es-primary) !important;">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted small mb-1">Всього замовлень</p>
+                            <h2 class="fw-bold mb-0">{{ total_orders }}</h2>
+                        </div>
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width:48px;height:48px;background:rgba(79,70,229,0.1);">
+                            <i class="bi bi-bag-check" style="color:var(--es-primary);font-size:1.4rem;"></i>
+                        </div>
+                    </div>
+                    <p class="text-muted small mt-2 mb-0">
+                        <i class="bi bi-clock me-1"></i>За 30 днів: <strong>{{ orders_30d }}</strong>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100" style="border-radius: 16px; border-left: 4px solid var(--es-success) !important;">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted small mb-1">Виручка (доставлено)</p>
+                            <h2 class="fw-bold mb-0">{{ revenue_total|floatformat:0 }} ₴</h2>
+                        </div>
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width:48px;height:48px;background:rgba(16,185,129,0.1);">
+                            <i class="bi bi-currency-dollar" style="color:var(--es-success);font-size:1.4rem;"></i>
+                        </div>
+                    </div>
+                    <p class="text-muted small mt-2 mb-0">
+                        <i class="bi bi-clock me-1"></i>За 30 днів: <strong>{{ revenue_30d|floatformat:0 }} ₴</strong>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100" style="border-radius: 16px; border-left: 4px solid var(--es-accent) !important;">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted small mb-1">Нові замовлення</p>
+                            <h2 class="fw-bold mb-0">
+                                {% for s in orders_status_data %}{% if s.status == 'new' %}{{ s.count }}{% endif %}{% endfor %}
+                            </h2>
+                        </div>
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width:48px;height:48px;background:rgba(245,158,11,0.1);">
+                            <i class="bi bi-bell" style="color:var(--es-accent);font-size:1.4rem;"></i>
+                        </div>
+                    </div>
+                    <p class="text-muted small mt-2 mb-0">
+                        <i class="bi bi-arrow-right me-1"></i>
+                        <a href="{% url 'admin:orders_order_changelist' %}?status=new" class="text-decoration-none">Обробити</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100" style="border-radius: 16px; border-left: 4px solid var(--es-danger) !important;">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted small mb-1">Мало на складі</p>
+                            <h2 class="fw-bold mb-0">{{ low_stock|length }}</h2>
+                        </div>
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width:48px;height:48px;background:rgba(239,68,68,0.1);">
+                            <i class="bi bi-exclamation-triangle" style="color:var(--es-danger);font-size:1.4rem;"></i>
+                        </div>
+                    </div>
+                    <p class="text-muted small mt-2 mb-0">
+                        <i class="bi bi-arrow-right me-1"></i>
+                        <a href="{% url 'admin:warehouse_supply_add' %}" class="text-decoration-none">Створити поставку</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm h-100" style="border-radius: 16px;">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">
+                        <i class="bi bi-pie-chart-fill" style="color:var(--es-primary);"></i> Замовлення за статусами
+                    </h5>
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Статус</th>
+                                <th class="text-end">К-сть</th>
+                                <th class="text-end">Частка</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in orders_status_data %}
+                            <tr>
+                                <td><span class="order-status status-{{ s.status }}">{{ s.label }}</span></td>
+                                <td class="text-end fw-semibold">{{ s.count }}</td>
+                                <td class="text-end text-muted small">
+                                    {% if total_orders %}{{ s.count }}/{{ total_orders }}{% else %}—{% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3" class="text-muted text-center">Замовлень немає</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm h-100" style="border-radius: 16px;">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">
+                        <i class="bi bi-exclamation-triangle-fill" style="color:var(--es-danger);"></i>
+                        Потребують поповнення
+                        <span class="badge bg-danger ms-1">{{ low_stock|length }}</span>
+                    </h5>
+                    {% if low_stock %}
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Товар</th>
+                                    <th>Категорія</th>
+                                    <th class="text-end">Залишок</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stock in low_stock %}
+                                <tr>
+                                    <td class="fw-semibold small">{{ stock.product.name }}</td>
+                                    <td class="text-muted small">{{ stock.product.category.name }}</td>
+                                    <td class="text-end">
+                                        {% if stock.quantity == 0 %}
+                                            <span class="badge bg-danger">0 шт.</span>
+                                        {% else %}
+                                            <span class="badge bg-warning text-dark">{{ stock.quantity }} шт.</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="{% url 'admin:warehouse_supply_add' %}"
+                                           class="btn btn-outline-primary btn-sm py-0">
+                                            <i class="bi bi-plus-lg"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-check-circle-fill text-success" style="font-size:2rem;"></i>
+                        <p class="mt-2 mb-0">Усі товари в достатній кількості</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card border-0 shadow-sm" style="border-radius: 16px;">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0">
+                            <i class="bi bi-clock-history" style="color:var(--es-primary);"></i> Останні замовлення
+                        </h5>
+                        <a href="{% url 'admin:orders_order_changelist' %}" class="btn btn-es-outline btn-sm">
+                            Всі замовлення
+                        </a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead style="background: var(--es-dark); color:#fff;">
+                                <tr>
+                                    <th style="border:none;">№</th>
+                                    <th style="border:none;">Клієнт</th>
+                                    <th style="border:none;">Телефон</th>
+                                    <th style="border:none;">Статус</th>
+                                    <th style="border:none;" class="text-end">Сума</th>
+                                    <th style="border:none;">Дата</th>
+                                    <th style="border:none;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in recent_orders %}
+                                <tr style="vertical-align: middle;">
+                                    <td class="fw-bold">#{{ order.pk }}</td>
+                                    <td>{{ order.first_name }} {{ order.last_name }}</td>
+                                    <td class="text-muted small">{{ order.phone }}</td>
+                                    <td>
+                                        <span class="order-status status-{{ order.status }}">
+                                            {{ order.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end fw-semibold" style="color:var(--es-primary);">
+                                        {{ order.total_cost|floatformat:0 }} ₴
+                                    </td>
+                                    <td class="text-muted small">{{ order.created_at|date:"d.m.Y H:i" }}</td>
+                                    <td>
+                                        <a href="{% url 'admin:orders_order_change' order.pk %}"
+                                           class="btn btn-sm btn-outline-secondary py-0">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">Замовлень поки немає</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Кошик — ElectroShop{% endblock %}
+
+{% block content %}
+<div class="animate-in">
+    <h1 class="h3 fw-bold mb-4">
+        <i class="bi bi-cart3" style="color: var(--es-primary);"></i> Кошик
+    </h1>
+
+    {% if cart|length > 0 %}
+    <div class="card border-0 shadow-sm" style="border-radius: 16px; overflow: hidden;">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 cart-table">
+                <thead>
+                    <tr>
+                        <th>Товар</th>
+                        <th>Ціна</th>
+                        <th style="width: 150px;">Кількість</th>
+                        <th>Сума</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in cart %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if item.product.image %}
+                                <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}"
+                                     style="width: 60px; height: 60px; object-fit: contain; margin-right: 1rem;"
+                                     class="rounded">
+                                {% endif %}
+                                <div>
+                                    <a href="{{ item.product.get_absolute_url }}" class="text-decoration-none fw-semibold">
+                                        {{ item.product.name }}
+                                    </a>
+                                    <br>
+                                    <small class="text-muted">{{ item.product.brand.name }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="fw-semibold">{{ item.price|floatformat:0 }} ₴</td>
+                        <td>
+                            <div class="input-group input-group-sm" style="width:130px;">
+                                <button class="btn btn-outline-secondary btn-sm qty-btn" type="button"
+                                        data-product="{{ item.product.pk }}" data-action="minus">−</button>
+                                <input type="number" min="1" max="99"
+                                       class="form-control text-center qty-input"
+                                       value="{{ item.quantity }}"
+                                       data-product="{{ item.product.pk }}"
+                                       data-url="{% url 'orders:cart_update_ajax' item.product.pk %}"
+                                       style="width:48px;">
+                                <button class="btn btn-outline-secondary btn-sm qty-btn" type="button"
+                                        data-product="{{ item.product.pk }}" data-action="plus">+</button>
+                            </div>
+                        </td>
+                        <td class="fw-bold item-total-{{ item.product.pk }}" style="color: var(--es-primary);">
+                            {{ item.total_price|floatformat:0 }} ₴
+                        </td>
+                        <td>
+                            <form action="{% url 'orders:cart_remove' item.product.pk %}" method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-danger btn-sm" title="Видалити">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="card-body border-top">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <a href="{% url 'catalog:product_list' %}" class="btn btn-es-outline">
+                        <i class="bi bi-arrow-left me-1"></i> Продовжити покупки
+                    </a>
+                </div>
+                <div class="col-md-6 text-end">
+                    <div class="mb-2">
+                        <span class="h5 text-muted">Разом: </span>
+                        <span class="h3 fw-bold cart-total" style="color: var(--es-primary);">
+                            {{ cart.get_total_price|floatformat:0 }} ₴
+                        </span>
+                    </div>
+                    <a href="{% url 'orders:checkout' %}" class="btn btn-es-primary btn-lg">
+                        <i class="bi bi-credit-card me-1"></i> Оформити замовлення
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-cart-x text-muted" style="font-size: 5rem;"></i>
+        <p class="text-muted mt-3 h5">Ваш кошик порожній</p>
+        <a href="{% url 'catalog:product_list' %}" class="btn btn-es-primary mt-3">
+            <i class="bi bi-grid me-1"></i> Перейти до каталогу
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const CSRF = '{{ csrf_token }}';
+
+function formatNum(val) {
+    return Math.round(parseFloat(val)).toLocaleString('uk-UA') + ' ₴';
+}
+
+async function updateQty(productId, qty, url) {
+    const resp = await fetch(url, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': CSRF, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quantity: qty }),
+    });
+    if (!resp.ok) return;
+    const data = await resp.json();
+    if (!data.ok) return;
+    if (data.item_total) {
+        const cell = document.querySelector('.item-total-' + productId);
+        if (cell) cell.textContent = formatNum(data.item_total);
+    }
+    document.querySelector('.cart-total').textContent = formatNum(data.cart_total);
+    document.querySelectorAll('.badge-cart').forEach(el => {
+        el.textContent = data.cart_count;
+    });
+}
+
+document.querySelectorAll('.qty-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const productId = btn.dataset.product;
+        const input = document.querySelector('.qty-input[data-product="' + productId + '"]');
+        let qty = parseInt(input.value);
+        if (btn.dataset.action === 'plus') qty++;
+        else qty = Math.max(1, qty - 1);
+        input.value = qty;
+        updateQty(productId, qty, input.dataset.url);
+    });
+});
+
+document.querySelectorAll('.qty-input').forEach(input => {
+    let timer;
+    input.addEventListener('input', () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+            const qty = Math.max(1, parseInt(input.value) || 1);
+            input.value = qty;
+            updateQty(input.dataset.product, qty, input.dataset.url);
+        }, 500);
+    });
+});
+</script>
+{% endblock %}

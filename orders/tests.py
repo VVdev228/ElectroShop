@@ -1,5 +1,5 @@
 """
-Unit-тести для корзины и оформления заказа.
+Unit-тести для кошика та оформлення замовлення.
 Запуск: python manage.py test orders
 """
 
@@ -129,10 +129,10 @@ class OrderCreationTest(TestCase):
         order = create_order_from_cart(cart, self.form_data)
         item = order.items.first()
         self.assertEqual(item.price, Decimal('29999.00'))
-        # Меняем цену товара
+        # Змінюємо ціну товару
         self.product.price = Decimal('99999.00')
         self.product.save()
-        # Цена в заказе не должна измениться
+        # Ціна в замовленні не повинна змінитися
         item.refresh_from_db()
         self.assertEqual(item.price, Decimal('29999.00'))
 

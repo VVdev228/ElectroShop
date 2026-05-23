@@ -1,5 +1,5 @@
 """
-Конфигурация приложения 'warehouse'.
+Конфігурація додатку 'warehouse'.
 """
 
 from django.apps import AppConfig

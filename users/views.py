@@ -1,6 +1,6 @@
 """
-Views приложения 'users'.
-Регистрация, вход, выход, профиль и панель менеджера.
+Views додатку 'users'.
+Реєстрація, вхід, вихід, профіль та панель менеджера.
 """
 
 from django.shortcuts import render, redirect
@@ -16,12 +16,12 @@ from .forms import CustomUserCreationForm, CustomUserLoginForm, ProfileEditForm,
 
 
 def _is_manager(user):
-    """Проверка: пользователь является менеджером или администратором."""
+    """Перевірка: користувач є менеджером або адміністратором."""
     return user.is_authenticated and (user.is_staff or user.role in ('manager', 'admin'))
 
 
 def register_view(request):
-    """Регистрация нового пользователя (клиента)."""
+    """Реєстрація нового користувача (клієнта)."""
     if request.user.is_authenticated:
         return redirect('home')
 
@@ -39,7 +39,7 @@ def register_view(request):
 
 
 def login_view(request):
-    """Вход в систему."""
+    """Вхід до системи."""
     if request.user.is_authenticated:
         return redirect('home')
 
@@ -49,7 +49,7 @@ def login_view(request):
             user = form.get_user()
             login(request, user)
             messages.success(request, f'З поверненням, {user.first_name or user.username}!')
-            # Перенаправляем на страницу, с которой пришёл пользователь
+            # Перенаправляємо на сторінку, з якої прийшов користувач
             next_url = request.GET.get('next', 'home')
             return redirect(next_url)
     else:
@@ -59,7 +59,7 @@ def login_view(request):
 
 
 def logout_view(request):
-    """Выход из системы."""
+    """Вихід із системи."""
     logout(request)
     messages.info(request, 'Ви вийшли з системи.')
     return redirect('home')
@@ -67,14 +67,14 @@ def logout_view(request):
 
 @login_required
 def profile_view(request):
-    """Личный кабинет пользователя с историей заказов."""
+    """Особистий кабінет користувача з історією замовлень."""
     orders = request.user.orders.all().prefetch_related('items__product')
     return render(request, 'users/profile.html', {'orders': orders})
 
 
 @login_required
 def profile_edit_view(request):
-    """Редактирование данных профиля пользователя."""
+    """Редагування даних профілю користувача."""
     if request.method == 'POST':
         form = ProfileEditForm(request.POST, instance=request.user)
         if form.is_valid():
@@ -104,25 +104,25 @@ def password_change_view(request):
 @user_passes_test(_is_manager, login_url='/users/login/')
 def manager_dashboard(request):
     """
-    Панель менеджера — ключевая страница демонстрации автоматизации.
+    Панель менеджера — ключова сторінка демонстрації автоматизації.
 
-    Отображает:
-    - Сводные показатели за всё время и за последние 30 дней
-    - Статистику заказов по статусам
-    - Товары с критически низким остатком (нужна закупка)
-    - Последние 10 заказов
+    Відображає:
+    - Зведені показники за весь час і за останні 30 днів
+    - Статистику замовлень за статусами
+    - Товари з критично низьким залишком (потрібна закупівля)
+    - Останні 10 замовлень
     """
     from orders.models import Order
     from warehouse.models import Stock
 
-    # Период для сравнения — последние 30 дней
+    # Період для порівняння — останні 30 днів
     thirty_days_ago = timezone.now() - timedelta(days=30)
 
-    # ── Общая статистика ──
+    # ── Загальна статистика ──
     total_orders = Order.objects.count()
     orders_30d   = Order.objects.filter(created_at__gte=thirty_days_ago).count()
 
-    # Выручка считается только по доставленным заказам
+    # Виторг рахується лише за доставленими замовленнями
     revenue_total = Order.objects.filter(
         status=Order.Status.DELIVERED
     ).aggregate(
@@ -136,7 +136,7 @@ def manager_dashboard(request):
         total=Sum(F('items__price') * F('items__quantity'))
     )['total'] or 0
 
-    # ── Заказы по статусам (для диаграммы и таблицы) ──
+    # ── Замовлення за статусами (для діаграми і таблиці) ──
     orders_by_status = Order.objects.values('status').annotate(
         count=Count('id')
     ).order_by('status')
@@ -151,12 +151,12 @@ def manager_dashboard(request):
         for item in orders_by_status
     ]
 
-    # ── Товары с низким остатком (≤ 5 штук) — нужна закупка ──
+    # ── Товари з низьким залишком (≤ 5 штук) — потрібна закупівля ──
     low_stock = Stock.objects.filter(
         quantity__lte=5
     ).select_related('product__category', 'product__brand').order_by('quantity')
 
-    # ── Последние 10 заказов ──
+    # ── Останні 10 замовлень ──
     recent_orders = Order.objects.select_related('user').prefetch_related(
         'items'
     ).order_by('-created_at')[:10]

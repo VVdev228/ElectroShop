@@ -1,11 +1,11 @@
 """
-Сигналы приложения 'orders'.
+Сигнали додатку 'orders'.
 
-АВТОМАТИЗАЦИЯ: возврат товара на склад при отмене заказа.
+АВТОМАТИЗАЦІЯ: повернення товару на склад при скасуванні замовлення.
 
-Когда менеджер меняет статус заказа на "Скасовано" (CANCELLED),
-сигнал pre_save перехватывает это изменение и автоматически
-возвращает все товары из заказа обратно на склад.
+Коли менеджер змінює статус замовлення на "Скасовано" (CANCELLED),
+сигнал pre_save перехоплює цю зміну і автоматично
+повертає всі товари із замовлення назад на склад.
 """
 
 from django.db.models import F
@@ -19,7 +19,7 @@ from warehouse.models import Stock
 
 @receiver(pre_save, sender=Order)
 def handle_order_cancellation(sender, instance, **kwargs):
-    """Сигнал: обработка отмены/восстановления заказа."""
+    """Сигнал: обробка скасування/відновлення замовлення."""
     if not instance.pk:
         return
 
@@ -43,7 +43,7 @@ def handle_order_cancellation(sender, instance, **kwargs):
 
 @transaction.atomic
 def _return_items_to_stock(order):
-    """Возврат товаров на склад при отмене заказа."""
+    """Повернення товарів на склад при скасуванні замовлення."""
     for item in order.items.select_related('product').all():
         Stock.objects.filter(product=item.product).update(
             quantity=F('quantity') + item.quantity
@@ -55,7 +55,7 @@ def _return_items_to_stock(order):
 @transaction.atomic
 def _deduct_items_from_stock(order):
     """
-    Повторне списання при відновленні заказу зі скасованого.
+    Повторне списання при відновленні замовлення зі скасованого.
     Перевіряємо наявність залишку перед кожним списанням.
     """
     from orders.services import InsufficientStockError

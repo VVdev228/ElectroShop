@@ -1,6 +1,6 @@
 """
-Views приложения 'catalog'.
-Отображение каталога товаров и карточек товаров.
+Views додатку 'catalog'.
+Відображення каталогу товарів та карток товарів.
 """
 
 from collections import defaultdict
@@ -47,26 +47,26 @@ def home_view(request):
 
 def product_list(request, category_slug=None):
     """
-    Страница каталога — список товаров с поиском, фильтрацией и пагинацией.
+    Сторінка каталогу — список товарів з пошуком, фільтрацією та пагінацією.
 
-    GET-параметры:
-    - q: поисковый запрос (по названию, артикулу, описанию)
-    - brand: фильтр по бренду (id)
-    - min_price, max_price: диапазон цен
-    - sort: сортировка (price_asc, price_desc, name, newest)
-    - page: номер страницы
+    GET-параметри:
+    - q: пошуковий запит (за назвою, артикулом, описом)
+    - brand: фільтр за брендом (id)
+    - min_price, max_price: діапазон цін
+    - sort: сортування (price_asc, price_desc, name, newest)
+    - page: номер сторінки
     """
     category = None
     categories_with_brands = _build_categories_with_brands()
     brands = Brand.objects.all()
     products = Product.objects.filter(available=True).select_related('category', 'brand')
 
-    # Фильтр по категории (через URL-slug)
+    # Фільтр за категорією (через URL-slug)
     if category_slug:
         category = get_object_or_404(Category, slug=category_slug)
         products = products.filter(category=category)
 
-    # Поиск по тексту — ищем в названии, артикуле и описании
+    # Пошук за текстом — шукаємо у назві, артикулі та описі
     query = request.GET.get('q', '').strip()
     if query:
         products = products.filter(
@@ -75,12 +75,12 @@ def product_list(request, category_slug=None):
             Q(description__icontains=query)
         )
 
-    # Фильтр по бренду
+    # Фільтр за брендом
     brand_id = request.GET.get('brand')
     if brand_id:
         products = products.filter(brand_id=brand_id)
 
-    # Фильтр по цене
+    # Фільтр за ціною
     min_price = request.GET.get('min_price')
     max_price = request.GET.get('max_price')
     if min_price:
@@ -94,7 +94,7 @@ def product_list(request, category_slug=None):
         except ValueError:
             pass
 
-    # Сортировка
+    # Сортування
     sort = request.GET.get('sort', 'newest')
     sort_options = {
         'price_asc':  'price',
@@ -104,7 +104,7 @@ def product_list(request, category_slug=None):
     }
     products = products.order_by(sort_options.get(sort, '-created_at'))
 
-    # Пагинация — 9 товаров на страницу (3×3 сетка)
+    # Пагінація — 9 товарів на сторінку (3×3 сітка)
     paginator = Paginator(products, 9)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -114,7 +114,7 @@ def product_list(request, category_slug=None):
         'categories_with_brands': categories_with_brands,
         'brands': brands,
         'page_obj': page_obj,
-        'products': page_obj,        # для совместимости с шаблоном
+        'products': page_obj,        # для сумісності із шаблоном
         'query': query,
         'sort': sort,
         'brand_id': brand_id or '',
@@ -127,8 +127,8 @@ def product_list(request, category_slug=None):
 
 def product_detail(request, slug):
     """
-    Карточка товара — подробная информация о товаре.
-    Показывает наличие на складе и форму добавления в корзину.
+    Картка товару — детальна інформація про товар.
+    Показує наявність на складі та форму додавання до кошика.
     """
     product = get_object_or_404(
         Product.objects.select_related('category', 'brand').prefetch_related('images'),
@@ -136,7 +136,7 @@ def product_detail(request, slug):
         available=True,
     )
 
-    # Получаем остаток на складе (если запись Stock существует)
+    # Отримуємо залишок на складі (якщо запис Stock існує)
     stock_quantity = 0
     try:
         stock_quantity = product.stock.quantity

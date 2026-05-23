@@ -1,6 +1,6 @@
 """
-Views приложения 'orders'.
-Работа с корзиной и оформление заказа.
+Views додатку 'orders'.
+Робота з кошиком та оформлення замовлення.
 """
 
 import json
@@ -18,8 +18,8 @@ from .services import create_order_from_cart, InsufficientStockError
 @require_POST
 def cart_add(request, product_id):
     """
-    Добавление товара в корзину (POST-запрос).
-    После добавления перенаправляет на страницу корзины.
+    Додавання товару до кошика (POST-запит).
+    Після додавання перенаправляє на сторінку кошика.
     """
     cart = Cart(request)
     product = get_object_or_404(Product, id=product_id)
@@ -39,7 +39,7 @@ def cart_add(request, product_id):
 
 @require_POST
 def cart_remove(request, product_id):
-    """Удаление товара из корзины."""
+    """Видалення товару з кошика."""
     cart = Cart(request)
     product = get_object_or_404(Product, id=product_id)
     cart.remove(product)
@@ -78,9 +78,9 @@ def cart_update_ajax(request, product_id):
 
 
 def cart_detail(request):
-    """Страница корзины — список товаров, количество, итого."""
+    """Сторінка кошика — список товарів, кількість, разом."""
     cart = Cart(request)
-    # Для каждого товара в корзине создаём форму обновления количества
+    # Для кожного товару в кошику створюємо форму оновлення кількості
     for item in cart:
         item['update_quantity_form'] = CartAddProductForm(
             initial={'quantity': item['quantity'], 'override': True}
@@ -91,13 +91,13 @@ def cart_detail(request):
 
 def checkout(request):
     """
-    Оформление заказа.
-    GET — отображает форму с контактными данными.
-    POST — создаёт заказ с транзакционным списанием со склада.
+    Оформлення замовлення.
+    GET — відображає форму з контактними даними.
+    POST — створює замовлення з транзакційним списанням зі складу.
     """
     cart = Cart(request)
 
-    # Нельзя оформить пустую корзину
+    # Не можна оформити порожній кошик
     if len(cart) == 0:
         messages.warning(request, 'Ваш кошик порожній.')
         return redirect('catalog:product_list')
@@ -106,21 +106,21 @@ def checkout(request):
         form = OrderCreateForm(request.POST)
         if form.is_valid():
             try:
-                # Вызываем сервисную функцию — атомарное создание заказа
+                # Викликаємо сервісну функцію — атомарне створення замовлення
                 user = request.user if request.user.is_authenticated else None
                 order = create_order_from_cart(cart, form.cleaned_data, user)
                 messages.success(request, f'Замовлення #{order.pk} успішно оформлено!')
                 return redirect('orders:order_success', order_id=order.pk)
 
             except InsufficientStockError as e:
-                # Товара на складе недостаточно — показываем ошибку
+                # Товару на складі недостатньо — показуємо помилку
                 messages.error(
                     request,
                     f'На жаль, товару «{e.product.name}» недостатньо '
                     f'на складі. Доступно: {e.available} шт.'
                 )
     else:
-        # Предзаполняем форму данными авторизованного пользователя
+        # Передзаповнюємо форму даними авторизованого користувача
         initial = {}
         if request.user.is_authenticated:
             initial = {
@@ -137,6 +137,6 @@ def checkout(request):
 
 
 def order_success(request, order_id):
-    """Страница успешного оформления заказа."""
+    """Сторінка успішного оформлення замовлення."""
     context = {'order_id': order_id}
     return render(request, 'orders/order_success.html', context)

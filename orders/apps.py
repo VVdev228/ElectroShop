@@ -1,5 +1,5 @@
 """
-Конфигурация приложения 'orders'.
+Конфігурація додатку 'orders'.
 """
 
 from django.apps import AppConfig
@@ -8,13 +8,13 @@ from django.apps import AppConfig
 class OrdersConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'orders'
-    verbose_name = 'Заказы'
+    verbose_name = 'Замовлення'
 
     def ready(self):
         """
-        Импортируем сигналы при запуске приложения.
-        Сигналы будут созданы на Шаге 5 для автоматического
-        списания товара со склада при оформлении заказа.
+        Імпортуємо сигнали при запуску додатку.
+        Сигнали відповідають за автоматичне списання товару зі складу
+        при оформленні замовлення та збереження кошика користувача.
         """
         import orders.signals      # noqa: F401
         import orders.cart_signals  # noqa: F401

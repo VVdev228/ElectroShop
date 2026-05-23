@@ -1,6 +1,6 @@
 """
-Настройка Django Admin для приложения 'catalog'.
-Удобное отображение категорий, брендов и товаров с поиском и фильтрацией.
+Налаштування Django Admin для додатку 'catalog'.
+Зручне відображення категорій, брендів і товарів з пошуком та фільтрацією.
 """
 
 from django.contrib import admin
@@ -11,28 +11,28 @@ from .models import Category, Brand, Product, ProductImage
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    """Административный интерфейс для категорий товаров."""
+    """Адміністративний інтерфейс для категорій товарів."""
 
     list_display = ('name', 'slug', 'product_count')
     search_fields = ('name',)
     prepopulated_fields = {'slug': ('name',)}
 
     def product_count(self, obj):
-        """Показывает количество товаров в категории."""
+        """Показує кількість товарів у категорії."""
         return obj.products.count()
-    product_count.short_description = 'Кол-во товаров'
+    product_count.short_description = 'К-сть товарів'
 
 
 @admin.register(Brand)
 class BrandAdmin(admin.ModelAdmin):
-    """Административный интерфейс для брендов."""
+    """Адміністративний інтерфейс для брендів."""
 
     list_display = ('name', 'slug', 'logo_preview')
     search_fields = ('name',)
     prepopulated_fields = {'slug': ('name',)}
 
     def logo_preview(self, obj):
-        """Превью логотипа бренда в списке."""
+        """Прев'ю логотипу бренду у списку."""
         if obj.logo:
             return format_html(
                 '<img src="{}" style="max-height: 30px;" />',
@@ -52,15 +52,15 @@ class ProductImageInline(admin.TabularInline):
         if obj.image:
             return format_html('<img src="{}" style="max-height: 60px; border-radius: 6px;" />', obj.image.url)
         return '—'
-    image_preview.short_description = 'Превью'
+    image_preview.short_description = "Прев'ю"
 
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     """
-    Административный интерфейс для товаров.
-    Включает поиск по названию/артикулу, фильтрацию по категории/бренду/доступности,
-    а также превью изображения товара.
+    Адміністративний інтерфейс для товарів.
+    Включає пошук за назвою/артикулом, фільтрацію за категорією/брендом/доступністю,
+    а також прев'ю зображення товару.
     """
 
     list_display = (
@@ -74,12 +74,12 @@ class ProductAdmin(admin.ModelAdmin):
     list_per_page = 25
     inlines = [ProductImageInline]
 
-    # Группировка полей в форме редактирования
+    # Групування полів у формі редагування
     fieldsets = (
-        ('Основная информация', {
+        ('Основна інформація', {
             'fields': ('sku', 'name', 'slug', 'category', 'brand'),
         }),
-        ('Описание и цена', {
+        ('Опис і ціна', {
             'fields': ('description', 'price', 'image'),
         }),
         ('Статус', {
@@ -88,7 +88,7 @@ class ProductAdmin(admin.ModelAdmin):
     )
 
     def image_preview(self, obj):
-        """Превью изображения товара в списке."""
+        """Прев'ю зображення товару у списку."""
         if obj.image:
             return format_html(
                 '<img src="{}" style="max-height: 40px;" />',

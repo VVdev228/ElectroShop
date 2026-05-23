@@ -1,6 +1,6 @@
 """
-Настройка Django Admin для приложения 'users'.
-Кастомное отображение модели CustomUser в административной панели.
+Налаштування Django Admin для додатку 'users'.
+Кастомне відображення моделі CustomUser в адміністративній панелі.
 """
 
 from django.contrib import admin
@@ -12,25 +12,25 @@ from .models import CustomUser
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
     """
-    Административный интерфейс для модели CustomUser.
-    Расширяет стандартный UserAdmin, добавляя поля роли, телефона и адреса.
+    Адміністративний інтерфейс для моделі CustomUser.
+    Розширює стандартний UserAdmin, додаючи поля ролі, телефону та адреси.
     """
 
-    # Отображение в списке пользователей
+    # Відображення у списку користувачів
     list_display = ('username', 'email', 'first_name', 'last_name', 'role', 'is_active')
     list_filter = ('role', 'is_active', 'is_staff', 'date_joined')
     search_fields = ('username', 'email', 'first_name', 'last_name', 'phone')
 
-    # Добавляем кастомные поля в форму редактирования пользователя
+    # Додаємо кастомні поля до форми редагування користувача
     fieldsets = UserAdmin.fieldsets + (
-        ('Дополнительная информация', {
+        ('Додаткова інформація', {
             'fields': ('role', 'phone', 'address'),
         }),
     )
 
-    # Добавляем кастомные поля в форму создания пользователя
+    # Додаємо кастомні поля до форми створення користувача
     add_fieldsets = UserAdmin.add_fieldsets + (
-        ('Дополнительная информация', {
+        ('Додаткова інформація', {
             'fields': ('role', 'phone', 'address'),
         }),
     )

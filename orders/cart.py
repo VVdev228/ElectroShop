@@ -1,7 +1,7 @@
 """
-Модуль корзины покупок на базе сессий Django.
+Модуль кошика покупок на базі сесій Django.
 
-Корзина хранится в сессии пользователя (request.session) в виде словаря:
+Кошик зберігається у сесії користувача (request.session) у вигляді словника:
 {
     "cart": {
         "product_id": {
@@ -12,11 +12,11 @@
     }
 }
 
-Преимущества подхода на сессиях:
-- Не требует авторизации — работает для всех посетителей
-- Не создаёт лишних записей в БД
-- Автоматически очищается при истечении сессии
-- Простота реализации и тестирования
+Переваги підходу на сесіях:
+- Не вимагає авторизації — працює для всіх відвідувачів
+- Не створює зайвих записів у БД
+- Автоматично очищається після завершення сесії
+- Простота реалізації та тестування
 """
 
 from decimal import Decimal
@@ -26,49 +26,49 @@ from django.conf import settings
 from catalog.models import Product
 
 
-# Ключ для хранения корзины в сессии
+# Ключ для зберігання кошика в сесії
 CART_SESSION_KEY = 'cart'
 
 
 class Cart:
     """
-    Класс корзины покупок.
+    Клас кошика покупок.
 
-    Использование:
-        cart = Cart(request)        # Получить корзину из сессии
-        cart.add(product, qty=1)    # Добавить товар
-        cart.remove(product)        # Удалить товар
-        cart.get_total_price()      # Общая стоимость
-        len(cart)                   # Количество позиций
-        for item in cart:           # Итерация по товарам
+    Використання:
+        cart = Cart(request)        # Отримати кошик із сесії
+        cart.add(product, qty=1)    # Додати товар
+        cart.remove(product)        # Видалити товар
+        cart.get_total_price()      # Загальна вартість
+        len(cart)                   # Кількість позицій
+        for item in cart:           # Ітерація по товарах
     """
 
     def __init__(self, request):
         """
-        Инициализация корзины.
-        Если в сессии нет корзины — создаём пустой словарь.
+        Ініціалізація кошика.
+        Якщо в сесії немає кошика — створюємо порожній словник.
         """
         self.session = request.session
         cart = self.session.get(CART_SESSION_KEY)
         if not cart:
-            # Создаём пустую корзину в сессии
+            # Створюємо порожній кошик у сесії
             cart = self.session[CART_SESSION_KEY] = {}
         self.cart = cart
 
     def add(self, product, quantity=1, override_quantity=False):
         """
-        Добавить товар в корзину или обновить его количество.
+        Додати товар до кошика або оновити його кількість.
 
-        Параметры:
-        - product: объект Product
-        - quantity: количество единиц
-        - override_quantity: если True — заменить количество,
-          если False — прибавить к текущему
+        Параметри:
+        - product: об'єкт Product
+        - quantity: кількість одиниць
+        - override_quantity: якщо True — замінити кількість,
+          якщо False — додати до поточної
         """
         product_id = str(product.pk)
 
         if product_id not in self.cart:
-            # Товар добавляется впервые — сохраняем цену
+            # Товар додається вперше — зберігаємо ціну
             self.cart[product_id] = {
                 'quantity': 0,
                 'price': str(product.price),
@@ -82,7 +82,7 @@ class Cart:
         self._save()
 
     def remove(self, product):
-        """Удалить товар из корзины."""
+        """Видалити товар із кошика."""
         product_id = str(product.pk)
         if product_id in self.cart:
             del self.cart[product_id]
@@ -90,9 +90,9 @@ class Cart:
 
     def __iter__(self):
         """
-        Итерация по товарам в корзине.
-        Для каждого товара загружаем объект Product из БД
-        и добавляем вычисляемые поля (total_price).
+        Ітерація по товарах у кошику.
+        Для кожного товару завантажуємо об'єкт Product з БД
+        та додаємо обчислювані поля (total_price).
         """
         product_ids = self.cart.keys()
         products = Product.objects.filter(id__in=product_ids)
@@ -108,26 +108,26 @@ class Cart:
             yield item
 
     def __len__(self):
-        """Общее количество позиций в корзине."""
+        """Загальна кількість позицій у кошику."""
         return sum(item['quantity'] for item in self.cart.values())
 
     def get_total_price(self):
-        """Общая стоимость всех товаров в корзине."""
+        """Загальна вартість усіх товарів у кошику."""
         return sum(
             Decimal(item['price']) * item['quantity']
             for item in self.cart.values()
         )
 
     def clear(self):
-        """Очистить корзину (после оформления заказа)."""
+        """Очистити кошик (після оформлення замовлення)."""
         del self.session[CART_SESSION_KEY]
         self.cart = {}
         self._save()
 
     def _save(self):
         """
-        Пометить сессию как изменённую.
-        Django сохраняет сессию только если она была изменена,
-        поэтому при любом изменении корзины нужно вызывать этот метод.
+        Позначити сесію як змінену.
+        Django зберігає сесію лише якщо її було змінено,
+        тому при будь-якій зміні кошика потрібно викликати цей метод.
         """
         self.session.modified = True

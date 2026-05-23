@@ -1,4 +1,4 @@
-"""URL-конфигурация приложения 'users'."""
+"""URL-конфігурація додатку 'users'."""
 
 from django.urls import path
 from . import views

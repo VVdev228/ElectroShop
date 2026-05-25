@@ -8,6 +8,7 @@ from django.http import HttpResponse
 from django.utils.html import format_html
 from django.db.models import Prefetch, Sum, F, ExpressionWrapper, DecimalField
 
+from users.admin_mixins import ManagerAccessMixin
 from .models import Order, OrderItem
 
 
@@ -75,7 +76,7 @@ STATUS_COLORS = {
 
 
 @admin.register(Order)
-class OrderAdmin(admin.ModelAdmin):
+class OrderAdmin(ManagerAccessMixin, admin.ModelAdmin):
     list_display = (
         'order_id', 'full_name', 'email', 'phone',
         'status_badge', 'status', 'total_cost_display', 'created_at',

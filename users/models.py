@@ -64,6 +64,18 @@ class CustomUser(AbstractUser):
     def __str__(self):
         return f'{self.get_full_name() or self.username} ({self.get_role_display()})'
 
+    def save(self, *args, **kwargs):
+        if self.role == self.Role.MANAGER:
+            self.is_staff = True
+            self.is_superuser = False
+        elif self.role == self.Role.ADMIN:
+            self.is_staff = True
+            self.is_superuser = True
+        elif self.role == self.Role.CLIENT:
+            if not self.is_superuser:
+                self.is_staff = False
+        super().save(*args, **kwargs)
+
     @property
     def is_client(self):
         """Перевірка: чи є користувач клієнтом."""

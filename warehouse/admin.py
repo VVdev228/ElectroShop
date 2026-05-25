@@ -13,11 +13,12 @@ from django.utils import timezone
 from django.db.models import F
 from django.db import transaction
 
+from users.admin_mixins import ManagerAccessMixin
 from .models import Supplier, Supply, SupplyItem, Stock
 
 
 @admin.register(Supplier)
-class SupplierAdmin(admin.ModelAdmin):
+class SupplierAdmin(ManagerAccessMixin, admin.ModelAdmin):
     """Адміністративний інтерфейс для постачальників."""
 
     list_display = ('name', 'contact_person', 'phone', 'email')
@@ -38,7 +39,7 @@ class SupplyItemInline(admin.TabularInline):
 
 
 @admin.register(Supply)
-class SupplyAdmin(admin.ModelAdmin):
+class SupplyAdmin(ManagerAccessMixin, admin.ModelAdmin):
     """
     Адміністративний інтерфейс для поставок.
 
@@ -124,7 +125,7 @@ class SupplyAdmin(admin.ModelAdmin):
 
 
 @admin.register(Stock)
-class StockAdmin(admin.ModelAdmin):
+class StockAdmin(ManagerAccessMixin, admin.ModelAdmin):
     """
     Адміністративний інтерфейс для перегляду залишків на складі.
     Лише для перегляду — залишки оновлюються автоматично

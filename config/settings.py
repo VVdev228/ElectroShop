@@ -121,7 +121,6 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']  # Директорія для статики під час розробки
 STATIC_ROOT = BASE_DIR / 'staticfiles'    # Директорія для collectstatic
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 
 # ──────────────────────────────────────────────
@@ -134,10 +133,22 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': config('CLOUDINARY_API_SECRET', default=''),
 }
 
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# Django 5.1+ використовує STORAGES замість DEFAULT_FILE_STORAGE і STATICFILES_STORAGE
+STORAGES = {
+    'default': {
+        'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
+    },
+}
+
+# django-cloudinary-storage 0.3.0 читає цей атрибут у своїй команді collectstatic,
+# але Django 6 його прибрав — тримаємо як сумісний workaround
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 
 # ──────────────────────────────────────────────

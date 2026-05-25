@@ -64,6 +64,13 @@ class CustomUser(AbstractUser):
     def __str__(self):
         return f'{self.get_full_name() or self.username} ({self.get_role_display()})'
 
+    def has_module_perms(self, app_label):
+        if self.is_active and self.is_superuser:
+            return True
+        if self.is_active and self.role == self.Role.MANAGER:
+            return app_label in ('orders', 'warehouse')
+        return super().has_module_perms(app_label)
+
     def save(self, *args, **kwargs):
         if self.role == self.Role.MANAGER:
             self.is_staff = True

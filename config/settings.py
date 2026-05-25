@@ -7,7 +7,7 @@ Django settings для проекту ElectroShop.
 import os
 from pathlib import Path
 from decouple import config, Csv
-
+import dj_database_url
 # Базова директорія проекту
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -73,16 +73,21 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # База даних — PostgreSQL
 # ──────────────────────────────────────────────
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='electroshop'),
-        'USER': config('DB_USER', default='postgres'),
-        'PASSWORD': config('DB_PASSWORD', default='postgres'),
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='5432'),
+DATABASE_URL = config('DATABASE_URL', default=None)
+
+if DATABASE_URL:
+    DATABASES = {'default': dj_database_url.parse(DATABASE_URL)}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': config('DB_NAME', default='electroshop'),
+            'USER': config('DB_USER', default='postgres'),
+            'PASSWORD': config('DB_PASSWORD', default='postgres'),
+            'HOST': config('DB_HOST', default='localhost'),
+            'PORT': config('DB_PORT', default='5432'),
+        }
     }
-}
 
 
 # ──────────────────────────────────────────────

@@ -90,13 +90,15 @@ def create_order_from_cart(cart, form_data, user=None):
         quantity = item['quantity']
         price = item['price']
 
-        # Крок 2a: Перевіряємо наявність на складі.
+        # Крок 2a: Перевіряємо доступність і наявність на складі.
         # select_for_update() блокує рядок Stock на час транзакції,
         # запобігаючи гонці даних (race condition) при паралельних замовленнях
+        if not product.available:
+            raise InsufficientStockError(product, quantity, 0)
+
         try:
             stock = Stock.objects.select_for_update().get(product=product)
         except Stock.DoesNotExist:
-            # Якщо запису Stock немає — отже, товар ніколи не надходив на склад
             raise InsufficientStockError(product, quantity, 0)
 
         # Крок 2b: Перевіряємо достатність залишку

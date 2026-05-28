@@ -9,7 +9,7 @@
 """
 
 from django.db.models import F
-from django.db.models.signals import pre_save
+from django.db.models.signals import pre_save, pre_delete
 from django.dispatch import receiver
 from django.db import transaction
 
@@ -73,3 +73,10 @@ def _deduct_items_from_stock(order):
         stock.refresh_from_db()
         if stock.quantity == 0:
             item.product.__class__.objects.filter(pk=item.product.pk).update(available=False)
+
+
+@receiver(pre_delete, sender=Order)
+def handle_order_deletion(sender, instance, **kwargs):
+    """При видаленні замовлення повертаємо товари на склад (якщо не скасоване)."""
+    if instance.status != Order.Status.CANCELLED:
+        _return_items_to_stock(instance)

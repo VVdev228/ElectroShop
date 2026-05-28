@@ -17,9 +17,9 @@ def save_cart_on_logout(sender, request, user, **kwargs):
     if user is None:
         return
     session_cart = request.session.get(CART_SESSION_KEY, {})
-    if session_cart:
-        user.saved_cart = session_cart
-        user.save(update_fields=['saved_cart'])
+    # Завжди зберігаємо (навіть порожній) — щоб очистити стару версію
+    user.saved_cart = session_cart
+    user.save(update_fields=['saved_cart'])
 
 
 @receiver(user_logged_in)

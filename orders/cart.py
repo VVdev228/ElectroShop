@@ -100,7 +100,14 @@ class Cart:
         cart = {k: dict(v) for k, v in self.cart.items()}
 
         for product in products:
-            cart[str(product.pk)]['product'] = product
+            cart_item = cart[str(product.pk)]
+            cart_item['product'] = product
+            # Оновлюємо ціну до актуальної — щоб клієнт не платив стару ціну
+            # якщо менеджер змінив її після додавання в кошик
+            cart_item['price'] = str(product.price)
+            self.cart[str(product.pk)]['price'] = str(product.price)
+
+        self._save()
 
         for item in cart.values():
             item['price'] = Decimal(item['price'])

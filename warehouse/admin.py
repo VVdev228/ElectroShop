@@ -80,14 +80,14 @@ class SupplyAdmin(ManagerAccessMixin, admin.ModelAdmin):
         # Перевіряємо: чи був змінений статус на "Отримана".
         # change=True означає, що об'єкт редагується (а не створюється вперше)
         if change and obj.status == Supply.Status.RECEIVED:
-            # Перевіряємо, чи статус справді змінився
-            # (щоб не оновлювати залишки повторно при повторному збереженні)
             old_supply = Supply.objects.get(pk=obj.pk)
             if old_supply.status != Supply.Status.RECEIVED:
-                # Статус змінився на "Отримана" — оновлюємо залишки
                 obj.received_at = timezone.now()
-                super().save_model(request, obj, form, change)
-                self._update_stock_on_receive(obj)
+                # Обидві операції в одній транзакції: якщо оновлення
+                # залишків впаде — поставка НЕ збережеться як RECEIVED
+                with transaction.atomic():
+                    super().save_model(request, obj, form, change)
+                    self._update_stock_on_receive(obj)
                 return
 
         super().save_model(request, obj, form, change)

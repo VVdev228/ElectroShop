@@ -26,16 +26,15 @@ class SupplierAdmin(ManagerAccessMixin, admin.ModelAdmin):
     list_per_page = 25
 
 
-class SupplyItemInline(admin.TabularInline):
+class SupplyItemInline(ManagerAccessMixin, admin.TabularInline):
     """
     Inline-форма для позицій поставки.
     Дозволяє додавати товари прямо у формі створення/редагування поставки.
     """
 
     model = SupplyItem
-    extra = 1  # Один порожній рядок для додавання нового товару
-    min_num = 1  # Мінімум одна позиція в поставці
-    autocomplete_fields = ['product']  # Зручний автокомпліт для вибору товару
+    extra = 1
+    min_num = 1
 
 
 @admin.register(Supply)

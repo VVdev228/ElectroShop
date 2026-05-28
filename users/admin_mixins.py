@@ -20,10 +20,10 @@ class ManagerAccessMixin:
             return True
         return super().has_view_permission(request, obj)
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request, obj=None):
         if self._is_manager(request):
             return True
-        return super().has_add_permission(request)
+        return super().has_add_permission(request, obj) if obj is not None else super().has_add_permission(request)
 
     def has_change_permission(self, request, obj=None):
         if self._is_manager(request):

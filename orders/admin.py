@@ -12,7 +12,7 @@ from users.admin_mixins import ManagerAccessMixin
 from .models import Order, OrderItem
 
 
-class OrderItemInline(admin.TabularInline):
+class OrderItemInline(ManagerAccessMixin, admin.TabularInline):
     model = OrderItem
     extra = 0
     readonly_fields = ('product', 'price', 'quantity', 'total_price_display')

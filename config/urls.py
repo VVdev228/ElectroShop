@@ -21,6 +21,7 @@ urlpatterns = [
     path('catalog/', include('catalog.urls')),         # Каталог товарів
     path('orders/', include('orders.urls')),           # Замовлення та кошик
     path('users/', include('users.urls')),             # Авторизація
+    path('silk/', include('silk.urls', namespace='silk')), 
 ]
 
 # У режимі розробки Django роздає медіафайли (зображення товарів)

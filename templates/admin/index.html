@@ -1,0 +1,210 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_stats %}
+
+{% block content %}
+{% dashboard_stats as stats %}
+
+<style>
+.dash-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+}
+.dash-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 18px 20px;
+    text-align: center;
+}
+.dash-card .value {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: #417690;
+}
+.dash-card .label {
+    font-size: 0.78rem;
+    color: #666;
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+.dash-card.green  .value { color: #065f46; }
+.dash-card.blue   .value { color: #1e40af; }
+.dash-card.orange .value { color: #92400e; }
+.dash-card.red    .value { color: #991b1b; }
+.dash-card.purple .value { color: #3730a3; }
+
+.dash-section {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    overflow: hidden;
+}
+.dash-section h3 {
+    margin: 0;
+    padding: 12px 18px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    background: #417690;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+}
+.dash-section table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+.dash-section table th {
+    padding: 8px 14px;
+    text-align: left;
+    background: #f8f8f8;
+    border-bottom: 1px solid #e0e0e0;
+    color: #333;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+}
+.dash-section table td {
+    padding: 8px 14px;
+    border-bottom: 1px solid #f0f0f0;
+    color: #333;
+}
+.dash-section table tr:last-child td { border-bottom: none; }
+.dash-section table tr:hover td { background: #f5f9fc; }
+
+.badge {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+.badge-new        { background: #dbeafe; color: #1e40af; }
+.badge-processing { background: #fef3c7; color: #92400e; }
+.badge-shipped    { background: #e0e7ff; color: #3730a3; }
+.badge-delivered  { background: #d1fae5; color: #065f46; }
+.badge-cancelled  { background: #fee2e2; color: #991b1b; }
+.badge-danger     { background: #fee2e2; color: #991b1b; }
+.badge-warning    { background: #fef3c7; color: #92400e; }
+.badge-ok         { background: #d1fae5; color: #065f46; }
+
+.dash-two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+@media (max-width: 900px) { .dash-two-col { grid-template-columns: 1fr; } }
+</style>
+
+<div style="padding: 8px 0 24px;">
+
+  <!-- Картки-лічильники -->
+  <div class="dash-grid">
+    <div class="dash-card">
+      <div class="value">{{ stats.total_orders }}</div>
+      <div class="label">Всього замовлень</div>
+    </div>
+    <div class="dash-card blue">
+      <div class="value">{{ stats.new_orders }}</div>
+      <div class="label">Нових</div>
+    </div>
+    <div class="dash-card orange">
+      <div class="value">{{ stats.processing_orders }}</div>
+      <div class="label">В обробці</div>
+    </div>
+    <div class="dash-card purple">
+      <div class="value">{{ stats.shipped_orders }}</div>
+      <div class="label">Відправлено</div>
+    </div>
+    <div class="dash-card green">
+      <div class="value">{{ stats.delivered_orders }}</div>
+      <div class="label">Доставлено</div>
+    </div>
+    <div class="dash-card red">
+      <div class="value">{{ stats.cancelled_orders }}</div>
+      <div class="label">Скасовано</div>
+    </div>
+    <div class="dash-card green" style="grid-column: span 2;">
+      <div class="value">{{ stats.revenue|floatformat:0 }} ₴</div>
+      <div class="label">Виручка (доставлені)</div>
+    </div>
+  </div>
+
+  <div class="dash-two-col">
+
+    <!-- Останні замовлення -->
+    <div class="dash-section">
+      <h3>Останні замовлення</h3>
+      {% if stats.recent_orders %}
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Клієнт</th>
+            <th>Статус</th>
+            <th>Дата</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in stats.recent_orders %}
+          <tr>
+            <td><a href="{% url 'admin:orders_order_change' order.pk %}">#{{ order.pk }}</a></td>
+            <td>{{ order.first_name }} {{ order.last_name }}</td>
+            <td>
+              <span class="badge badge-{{ order.status }}">{{ order.get_status_display }}</span>
+            </td>
+            <td>{{ order.created_at|date:"d.m.Y H:i" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p style="padding:14px 18px;color:#888;margin:0;">Замовлень ще немає</p>
+      {% endif %}
+    </div>
+
+    <!-- Критичні залишки -->
+    <div class="dash-section">
+      <h3>Критичні залишки на складі</h3>
+      {% if stats.low_stock %}
+      <table>
+        <thead>
+          <tr>
+            <th>Товар</th>
+            <th>Залишок</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in stats.low_stock %}
+          <tr>
+            <td>{{ item.product.name }}</td>
+            <td>
+              {% if item.quantity == 0 %}
+                <span class="badge badge-danger">0 шт.</span>
+              {% elif item.quantity <= 2 %}
+                <span class="badge badge-danger">{{ item.quantity }} шт.</span>
+              {% else %}
+                <span class="badge badge-warning">{{ item.quantity }} шт.</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p style="padding:14px 18px;color:#2d6a4f;margin:0;">✓ Всі товари в наявності</p>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <!-- Стандартні секції адмінки (список моделей) -->
+  {{ block.super }}
+
+</div>
+{% endblock %}

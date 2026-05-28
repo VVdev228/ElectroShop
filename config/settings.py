@@ -129,8 +129,10 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'    # Директорія для collects
 # Медіафайли — Cloudinary (хмарне сховище для продакшну)
 # ──────────────────────────────────────────────
 
+CLOUDINARY_CLOUD_NAME = config('CLOUDINARY_CLOUD_NAME', default='')
+
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME', default=''),
+    'CLOUD_NAME': CLOUDINARY_CLOUD_NAME,
     'API_KEY': config('CLOUDINARY_API_KEY', default=''),
     'API_SECRET': config('CLOUDINARY_API_SECRET', default=''),
 }
@@ -138,10 +140,17 @@ CLOUDINARY_STORAGE = {
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# Використовуємо Cloudinary лише якщо задані credentials, інакше — локальне сховище
+_media_backend = (
+    'cloudinary_storage.storage.MediaCloudinaryStorage'
+    if CLOUDINARY_CLOUD_NAME
+    else 'django.core.files.storage.FileSystemStorage'
+)
+
 # Django 5.1+ використовує STORAGES замість DEFAULT_FILE_STORAGE і STATICFILES_STORAGE
 STORAGES = {
     'default': {
-        'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
+        'BACKEND': _media_backend,
     },
     'staticfiles': {
         'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
